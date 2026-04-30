@@ -80,7 +80,7 @@ class Thread {
     bool has_dynamic_name;  // true if the thread name is dynamically allocated
 
    public:
-    Thread(char *debugName,
+    Thread(char *debugName,int priority=0,
            bool _has_dynamic_name = false);  // initialize a Thread
     ~Thread();                               // deallocate a Thread
                                              // NOTE -- thread being deleted
@@ -88,6 +88,7 @@ class Thread {
                                              // is called
 
     int processID;
+    int priority;
     int parrentID;
     int exitStatus;
     void FreeSpace() {

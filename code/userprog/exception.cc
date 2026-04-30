@@ -154,6 +154,12 @@ void handle_SC_Add() {
     return move_program_counter();
 }
 
+void handle_SC_Sleep() {
+	int ticks=kernel->machine->ReadRegister(4);
+	SysSleep(ticks);
+	return move_program_counter();
+}	
+
 void handle_SC_Abs() {
     /* Process SysAbs Systemcall*/
     int result;
@@ -316,12 +322,34 @@ void handle_SC_Exec() {
         return move_program_counter();
     }
 
-    kernel->machine->WriteRegister(2, SysExec(name));
+    kernel->machine->WriteRegister(2, SysExecWithPriority(name,5));
     // DO NOT DELETE NAME, THE THEARD WILL DELETE IT LATER
     // delete[] name;
 
     return move_program_counter();
 }
+
+void handle_SC_ExecWithPriority() { 
+    int virtAddr;
+    virtAddr = kernel->machine->ReadRegister(
+        4);  // doc dia chi ten chuong trinh tu thanh ghi r4
+    int priority=kernel->machine->ReadRegister(5);
+    char* name;
+    name = stringUser2System(virtAddr);  // Lay ten chuong trinh, nap vao kernel
+    if (name == NULL) {
+        DEBUG(dbgSys, "\n Not enough memory in System");
+        ASSERT(false);
+        kernel->machine->WriteRegister(2, -1);
+        return move_program_counter();
+    }
+
+    kernel->machine->WriteRegister(2, SysExecWithPriority(name,priority));
+    // DO NOT DELETE NAME, THE THEARD WILL DELETE IT LATER
+    // delete[] name;
+
+    return move_program_counter();
+}
+
 
 /**
  * @brief handle System Call Join
@@ -433,6 +461,10 @@ void ExceptionHandler(ExceptionType which) {
                     return handle_SC_Add();
                 case SC_Abs:
                     return handle_SC_Abs();
+		case SC_Sleep:
+                    return handle_SC_Sleep();
+		case SC_ExecWithPriority:
+                    return handle_SC_ExecWithPriority();
 		case SC_ReadNum:
                     return handle_SC_ReadNum();
                 case SC_PrintNum:

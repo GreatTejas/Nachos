@@ -204,12 +204,28 @@ int SysExec(char* name) {
     delete oFile;
 
     // Return child process id
-    return kernel->pTab->ExecUpdate(name);
+    return kernel->pTab->ExecUpdate(name,5);
+}
+
+int SysExecWithPriority(char* name,int priority) {
+    // cerr << "call: `" << name  << "`"<< endl;
+    OpenFile* oFile = kernel->fileSystem->Open(name);
+    if (oFile == NULL) {
+        DEBUG(dbgSys, "\nExec:: Can't open this file.");
+        return -1;
+    }
+
+    delete oFile;
+
+    // Return child process id
+    return kernel->pTab->ExecUpdate(name,priority);
 }
 
 int SysJoin(int id) { return kernel->pTab->JoinUpdate(id); }
 
 int SysExit(int id) { return kernel->pTab->ExitUpdate(id); }
+
+void SysSleep(int ticks) {kernel->alarm->WaitUntil(ticks);}
 
 int SysCreateSemaphore(char* name, int initialValue) {
     int res = kernel->semTab->Create(name, initialValue);

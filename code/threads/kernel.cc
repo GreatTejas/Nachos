@@ -88,7 +88,7 @@ void Kernel::Initialize(char *userProgName /*=NULL*/) {
     // We didn't explicitly allocate the current thread we are running in.
     // But if it ever tries to give up the CPU, we better have a Thread
     // object to save its state.
-    currentThread = new Thread(userProgName);
+    currentThread = new Thread(userProgName,5);
     currentThread->setStatus(RUNNING);
 
     stats = new Statistics();        // collect statistics

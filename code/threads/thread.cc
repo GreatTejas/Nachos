@@ -33,9 +33,10 @@ const int STACK_FENCEPOST = 0xdedbeef;
 //	"threadName" is an arbitrary string, useful for debugging.
 //----------------------------------------------------------------------
 
-Thread::Thread(char *threadName, bool _has_dynamic_name /*=false*/) {
+Thread::Thread(char *threadName,int tpriority, bool _has_dynamic_name /*=false*/) {
     has_dynamic_name = _has_dynamic_name;
     name = threadName;
+    priority=tpriority;
     stackTop = NULL;
     stack = NULL;
     status = JUST_CREATED;
@@ -199,12 +200,9 @@ void Thread::Yield() {
     ASSERT(this == kernel->currentThread);
 
     DEBUG(dbgThread, "Yielding thread: " << name);
-
+    kernel->scheduler->ReadyToRun(this);
     nextThread = kernel->scheduler->FindNextToRun();
-    if (nextThread != NULL) {
-        kernel->scheduler->ReadyToRun(this);
-        kernel->scheduler->Run(nextThread, FALSE);
-    }
+    kernel->scheduler->Run(nextThread, FALSE);
     (void)kernel->interrupt->SetLevel(oldLevel);
 }
 

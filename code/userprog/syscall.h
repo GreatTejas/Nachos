@@ -49,6 +49,8 @@
 #define SC_Signal 53
 #define SC_GetPid 54
 #define SC_Abs 55
+#define SC_Sleep 56
+#define SC_ExecWithPriority 57
 
 #ifndef IN_ASM
 
@@ -73,6 +75,11 @@ int Add(int op1, int op2);
 
 int Abs(int op);
 
+void Sleep(int ticks);
+
+typedef int SpaceId;
+SpaceId ExecWithPriority(char *exec_name,int priority);
+
 int ReadNum();
 
 void PrintNum(int num);
@@ -93,7 +100,7 @@ void PrintString(char *buffer);
 void Exit(int status);
 
 /* A unique identifier for an executing user program (address space) */
-typedef int SpaceId;
+
 
 /* A unique identifier for a thread within a task */
 typedef int ThreadId;

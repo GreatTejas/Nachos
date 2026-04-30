@@ -20,7 +20,8 @@
 //		occur at random, instead of fixed, intervals.
 //----------------------------------------------------------------------
 
-Alarm::Alarm(bool doRandom) { timer = new Timer(doRandom, this); }
+
+Alarm::Alarm(bool doRandom) { timer = new Timer(doRandom, this); sleepList = new List<SleepThread*>(); }
 
 //----------------------------------------------------------------------
 // Alarm::CallBack
@@ -43,8 +44,68 @@ Alarm::Alarm(bool doRandom) { timer = new Timer(doRandom, this); }
 void Alarm::CallBack() {
     Interrupt *interrupt = kernel->interrupt;
     MachineStatus status = interrupt->getStatus();
+    
+    int now=kernel->stats->totalTicks;
+    ListIterator<SleepThread *> it(sleepList);
+    while(!it.IsDone())
+    {
+	    SleepThread *st=it.Item();
+	    it.Next();
+	    if(st->wakeTime<=now)
+	    {
+		    kernel->scheduler->ReadyToRun(st->thread);
+		    sleepList->Remove(st);
+		    delete st;
+	    }
+    }
 
     if (status != IdleMode) {
         interrupt->YieldOnReturn();
     }
+}
+
+/*void Alarm::CallBack() {
+    Interrupt *interrupt = kernel->interrupt;
+    MachineStatus status = interrupt->getStatus();
+    int now = kernel->stats->totalTicks;
+
+    // Collect threads to wake — don't modify list during iteration
+    List<SleepThread *> *toWake = new List<SleepThread *>();
+
+    ListIterator<SleepThread *> it(sleepList);
+    while (!it.IsDone()) {
+        SleepThread *st = it.Item();
+        if (st->wakeTime <= now) {
+            toWake->Append(st);
+        }
+        it.Next();
+    }
+
+    // Now safely remove and wake
+    ListIterator<SleepThread *> wit(toWake);
+    while (!wit.IsDone()) {
+        SleepThread *st = wit.Item();
+        wit.Next();
+        sleepList->Remove(st);
+        kernel->scheduler->ReadyToRun(st->thread);
+        delete st;
+    }
+    delete toWake;
+
+    if (status != IdleMode) {
+        interrupt->YieldOnReturn();
+    }
+}*/
+void Alarm::WaitUntil(int ticks)
+{
+	IntStatus oldLevel = kernel->interrupt->SetLevel(IntOff);
+	int wakeTime=kernel->stats->totalTicks+ticks;
+
+	SleepThread *s=new SleepThread;
+	s->thread=kernel->currentThread;
+	s->wakeTime=wakeTime;
+
+	sleepList->Append(s);
+	kernel->currentThread->Sleep(FALSE);
+	kernel->interrupt->SetLevel(oldLevel);
 }
